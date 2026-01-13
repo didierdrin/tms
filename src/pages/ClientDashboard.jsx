@@ -4,10 +4,12 @@ import { Plus, Truck, Package, FileText, TrendingUp, Eye, EyeOff } from 'lucide-
 import { Link } from 'react-router-dom';
 import useShipmentStore from '../store/useShipmentStore';
 import useAuthStore from '../store/useAuthStore';
+import useCurrencyStore from '../store/useCurrencyStore';
 
 const ClientDashboard = () => {
     const { shipments } = useShipmentStore();
     const { userProfile } = useAuthStore();
+    const { formatAmount } = useCurrencyStore();
     const [showBalance, setShowBalance] = useState(true);
 
     const stats = [
@@ -32,7 +34,7 @@ const ClientDashboard = () => {
         {
             icon: TrendingUp,
             label: 'Total Spent',
-            value: `$${(shipments.length * 150).toLocaleString()}`,
+            value: formatAmount(shipments.length * 150),
             color: 'from-orange-500 to-orange-600'
         }
     ];
@@ -208,7 +210,7 @@ const ClientDashboard = () => {
                             </button>
                         </div>
                         <p className="text-3xl font-bold">
-                            {showBalance ? '$5,250.00' : '••••••'}
+                            {showBalance ? formatAmount(5250) : '••••••'}
                         </p>
                         <p className="text-slate-400 text-sm mt-2">Available for shipments</p>
                     </div>

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Eye, Search, Mail, Phone } from 'lucide-react';
 import useCustomerStore from '../store/useCustomerStore';
+import useCurrencyStore from '../store/useCurrencyStore';
 
 const Customers = () => {
     const { customers, deleteCustomer } = useCustomerStore();
+    const { formatAmount } = useCurrencyStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState(null);
 
@@ -133,7 +135,7 @@ const Customers = () => {
                                 <div>
                                     <p className="text-xs text-slate-500 dark:text-slate-500">Total Spent</p>
                                     <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                                        ${customer.totalSpent}
+                                        {formatAmount(customer.totalSpent)}
                                     </p>
                                 </div>
                             </div>
@@ -210,7 +212,7 @@ const Customers = () => {
                             <div>
                                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Total Spent</p>
                                 <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                                    ${selectedCustomer.totalSpent}
+                                    {formatAmount(selectedCustomer.totalSpent)}
                                 </p>
                             </div>
                         </div>

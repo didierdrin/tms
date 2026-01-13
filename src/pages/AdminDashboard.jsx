@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { BarChart3, TrendingUp, Users, Truck, Package, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import useShipmentStore from '../store/useShipmentStore';
 import useCustomerStore from '../store/useCustomerStore';
+import useCurrencyStore from '../store/useCurrencyStore';
 
 const AdminDashboard = () => {
     const { shipments } = useShipmentStore();
     const { customers } = useCustomerStore();
+    const { formatAmount } = useCurrencyStore();
 
     const totalRevenue = shipments.length * 150;
     const activeShipments = shipments.filter(s => s.status === 'in-transit').length;
@@ -32,7 +34,7 @@ const AdminDashboard = () => {
         {
             icon: DollarSign,
             label: 'Total Revenue',
-            value: `$${totalRevenue.toLocaleString()}`,
+            value: formatAmount(totalRevenue),
             change: '+23%',
             positive: true,
             color: 'from-purple-500 to-purple-600'

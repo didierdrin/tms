@@ -19,6 +19,7 @@ import clsx from 'clsx';
 import useAuthStore from '../store/useAuthStore';
 import useUIStore from '../store/useUIStore';
 import ThemeToggle from '../components/ThemeToggle';
+import CurrencyToggle from '../components/CurrencyToggle';
 
 const SidebarItem = ({ icon: Icon, label, to, collapsed }) => (
     <NavLink
@@ -134,16 +135,23 @@ const AdminLayout = () => {
                     ))}
                 </nav>
 
-                {/* Bottom Section - Theme & Logout */}
+                {/* Bottom Section - Currency, Theme & Logout */}
                 <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
                     {!sidebarCollapsed && (
-                        <div className="flex items-center justify-between px-4 py-2">
-                            <span className="text-sm text-slate-600 dark:text-slate-400">Theme</span>
-                            <ThemeToggle />
-                        </div>
+                        <>
+                            <div className="flex items-center justify-between px-4 py-2">
+                                <span className="text-sm text-slate-600 dark:text-slate-400">Currency</span>
+                                <CurrencyToggle />
+                            </div>
+                            <div className="flex items-center justify-between px-4 py-2">
+                                <span className="text-sm text-slate-600 dark:text-slate-400">Theme</span>
+                                <ThemeToggle />
+                            </div>
+                        </>
                     )}
                     {sidebarCollapsed && (
-                        <div className="flex justify-center">
+                        <div className="flex justify-center gap-2">
+                            <CurrencyToggle />
                             <ThemeToggle />
                         </div>
                     )}
@@ -169,6 +177,7 @@ const AdminLayout = () => {
                         TMS
                     </div>
                     <div className="flex items-center gap-2">
+                        <CurrencyToggle />
                         <ThemeToggle />
                         <button
                             onClick={() => setMobileMenuOpen(true)}
@@ -259,6 +268,10 @@ const AdminLayout = () => {
                             </div>
 
                             <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                                <div className="flex items-center justify-between px-4 py-2">
+                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Currency</span>
+                                    <CurrencyToggle />
+                                </div>
                                 <div className="flex items-center justify-between px-4 py-2">
                                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Dark Mode</span>
                                     <ThemeToggle />

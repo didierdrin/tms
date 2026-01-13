@@ -16,6 +16,7 @@ import {
 import clsx from 'clsx';
 import useAuthStore from '../store/useAuthStore';
 import ThemeToggle from '../components/ThemeToggle';
+import CurrencyToggle from '../components/CurrencyToggle';
 
 const ClientLayout = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -83,6 +84,7 @@ const ClientLayout = () => {
 
                         {/* Desktop Right Section */}
                         <div className="hidden md:flex items-center gap-4">
+                            <CurrencyToggle />
                             <ThemeToggle />
 
                             {user ? (
@@ -117,6 +119,7 @@ const ClientLayout = () => {
 
                         {/* Mobile Menu Button */}
                         <div className="md:hidden flex items-center gap-2">
+                            <CurrencyToggle />
                             <ThemeToggle />
                             <button
                                 onClick={() => setMobileMenuOpen(true)}
@@ -211,6 +214,12 @@ const ClientLayout = () => {
                                 </div>
                             </div>
 
+                            {/* Currency Toggle */}
+                            <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Currency</p>
+                                <CurrencyToggle />
+                            </div>
+
                             {/* Bottom Actions */}
                             <div className="p-6 border-t border-slate-200 dark:border-slate-800">
                                 {user ? (
@@ -300,6 +309,7 @@ const ClientLayout = () => {
                                 Real-time tracking, automated documentation, and comprehensive fleet management.
                             </p>
                             <div className="flex gap-4">
+                                <CurrencyToggle />
                                 <ThemeToggle />
                             </div>
                         </div>

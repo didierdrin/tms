@@ -4,42 +4,15 @@ import { persist } from 'zustand/middleware';
 const useThemeStore = create(
     persist(
         (set) => ({
-            theme: 'light',
-            toggleTheme: () =>
-                set((state) => {
-                    const newTheme = state.theme === 'light' ? 'dark' : 'light';
+            theme: 'light', // 'light' | 'dark'
 
-                    // Update HTML class
-                    if (newTheme === 'dark') {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
-
-                    return { theme: newTheme };
-                }),
-            setTheme: (theme) =>
-                set(() => {
-                    // Update HTML class
-                    if (theme === 'dark') {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
-
-                    return { theme };
-                }),
+            setTheme: (theme) => set({ theme }),
+            toggleTheme: () => set(state => ({
+                theme: state.theme === 'light' ? 'dark' : 'light'
+            }))
         }),
         {
-            name: 'tms-theme',
-            onRehydrateStorage: () => (state) => {
-                // Apply theme on initial load
-                if (state?.theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            },
+            name: 'theme-storage'
         }
     )
 );

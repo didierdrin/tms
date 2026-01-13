@@ -9,22 +9,26 @@ import PrivateRoute from './components/PrivateRoute';
 // Client Pages
 import Landing from './pages/Landing';
 import Login from './pages/Login';
-
-// Placeholder pages (to be implemented)
-const Register = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Register</h1><p>Create your account here.</p></div>;
-const Services = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Our Services</h1><p>Explore our logistics services.</p></div>;
-const Track = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Track Shipment</h1><p>Enter your tracking number to find your shipment.</p></div>;
-const Contact = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Contact Us</h1><p>Get in touch with our team.</p></div>;
-const ClientDashboard = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">My Dashboard</h1><p>View your shipments and documents.</p></div>;
+import Register from './pages/Register';
+import Services from './pages/Services';
+import Track from './pages/Track';
+import Contact from './pages/Contact';
+import ClientDashboard from './pages/ClientDashboard';
 
 // Admin Pages
-const AdminDashboard = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1><p>Overview of all operations.</p></div>;
-const Shipments = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Shipments Management</h1><p>Manage all shipments here.</p></div>;
-const Customers = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Customer Management</h1><p>View and manage customers.</p></div>;
+import AdminDashboard from './pages/AdminDashboard';
+import Shipments from './pages/Shipments';
+import Customers from './pages/Customers';
+
+// Placeholder admin pages (to be implemented)
 const Documents = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Documents</h1><p>Generate and manage documents.</p></div>;
 const Analytics = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Analytics</h1><p>View performance metrics and reports.</p></div>;
 const Map = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Live Map</h1><p>Real-time tracking map coming soon.</p></div>;
 const Settings = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Settings</h1><p>Configure system settings.</p></div>;
+
+// Placeholder pages
+const PrivacyPolicy = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Privacy Policy</h1></div>;
+const TermsOfService = () => <div className="p-8"><h1 className="text-2xl font-bold mb-4">Terms of Service</h1></div>;
 
 function App() {
   const { initialize, loading } = useAuthStore();
@@ -66,6 +70,8 @@ function App() {
           <Route path="services" element={<Services />} />
           <Route path="track" element={<Track />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="privacy" element={<PrivacyPolicy />} />
+          <Route path="terms" element={<TermsOfService />} />
 
           {/* Protected Client Routes */}
           <Route
@@ -119,4 +125,3 @@ function App() {
 }
 
 export default App;
-

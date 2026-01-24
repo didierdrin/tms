@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Eye, Search } from 'lucide-react';
 import useShipmentStore from '../store/useShipmentStore';
 
 const Shipments = () => {
-    const { shipments, deleteShipment } = useShipmentStore();
+    const { shipments, deleteShipment, fetchShipments } = useShipmentStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [selectedShipment, setSelectedShipment] = useState(null);
+
+    useEffect(() => {
+        fetchShipments();
+    }, [fetchShipments]);
 
     const filteredShipments = shipments.filter(s => {
         const matchesSearch = s.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||

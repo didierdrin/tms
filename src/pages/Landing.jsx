@@ -53,7 +53,7 @@ const Landing = () => {
     return (
         <div className="min-h-screen bg-gradient-to-b from-slate-50 via-primary-50/30 to-slate-50 dark:from-slate-950 dark:via-primary-950/30 dark:to-slate-950">
             {/* Hero Section */}
-            <section className="pt-20 pb-32 px-4 sm:px-6 lg:px-8">
+            <section className="pt-20 pb-22 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -107,16 +107,7 @@ const Landing = () => {
                         </div>
                     </motion.div>
 
-                    {/* Hero Image Placeholder */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="relative h-96 bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/30 dark:to-primary-800/20 rounded-2xl border border-primary-200 dark:border-primary-800 flex items-center justify-center overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-                        <Truck className="text-primary-600 dark:text-primary-400" size={120} />
-                    </motion.div>
+                    
                 </div>
             </section>
 

@@ -66,10 +66,10 @@ const AdminLayout = () => {
         { icon: LayoutDashboard, label: 'Dashboard', to: '/admin/dashboard' },
         { icon: Truck, label: 'Shipments', to: '/admin/shipments' },
         { icon: Users, label: 'Customers', to: '/admin/customers' },
-        { icon: FileText, label: 'Documents', to: '/admin/documents' },
-        { icon: BarChart, label: 'Analytics', to: '/admin/analytics' },
+        // { icon: FileText, label: 'Documents', to: '/admin/documents' },
+        // { icon: BarChart, label: 'Analytics', to: '/admin/analytics' },
         { icon: MapIcon, label: 'Map', to: '/admin/map' },
-        { icon: Settings, label: 'Settings', to: '/admin/settings' },
+        // { icon: Settings, label: 'Settings', to: '/admin/settings' },
     ];
 
     return (

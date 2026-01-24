@@ -93,7 +93,7 @@ function App() {
             </PrivateRoute>
           }
         >
-          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="shipments" element={<Shipments />} />
           <Route path="customers" element={<Customers />} />
@@ -102,6 +102,8 @@ function App() {
           <Route path="map" element={<Map />} />
           <Route path="settings" element={<Settings />} />
         </Route>
+
+        {/* Redirect /admin/dashboard to /admin/dashboard (already handled above) */}
 
         {/* 404 Not Found */}
         <Route

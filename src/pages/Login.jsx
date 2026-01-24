@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, Mail, Lock, AlertCircle, Loader } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, Loader, Eye, EyeOff } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 
 const Login = () => {
@@ -9,6 +9,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const { login } = useAuthStore();
     const navigate = useNavigate();
@@ -23,12 +24,12 @@ const Login = () => {
 
         try {
             await login(email, password);
-            // Redirect based on role - handled by auth store
             const role = useAuthStore.getState().role;
+            
             if (role === 'admin') {
-                navigate('/admin/dashboard');
+                navigate('/admin/dashboard', { replace: true });
             } else {
-                navigate(from, { replace: true });
+                navigate('/dashboard', { replace: true });
             }
         } catch (err) {
             console.error('Login error:', err);
@@ -107,13 +108,20 @@ const Login = () => {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
                                     id="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     placeholder="••••••••"
-                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                                    className="w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
                             </div>
                         </div>
 

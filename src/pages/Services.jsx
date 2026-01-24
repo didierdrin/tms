@@ -117,7 +117,7 @@ const Services = () => {
                                         {service.description}
                                     </p>
                                     <div className="flex items-center text-primary-600 dark:text-primary-400 font-medium group-hover:gap-2 transition-all">
-                                        Learn more
+                                        Proceed
                                         <ArrowRight size={18} className="ml-2" />
                                     </div>
                                 </div>

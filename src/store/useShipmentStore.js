@@ -3,39 +3,7 @@ import { db } from '../lib/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
 
 const useShipmentStore = create((set, get) => ({
-    shipments: [
-        {
-            id: '1',
-            trackingNumber: 'TMS-2024-001',
-            origin: 'Kigali',
-            destination: 'Kampala',
-            status: 'in-transit',
-            type: 'Ocean Transport',
-            weight: 500,
-            shippedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-            expectedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-            timeline: [
-                { status: 'Picked up', location: 'Kigali Warehouse', timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-                { status: 'In Transit', location: 'En route to Kampala', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-                { status: 'Out for Delivery', location: 'Kampala Distribution Center', timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }
-            ]
-        },
-        {
-            id: '2',
-            trackingNumber: 'TMS-2024-002',
-            origin: 'Kigali',
-            destination: 'Dar es Salaam',
-            status: 'delivered',
-            type: 'Inland Transport',
-            weight: 250,
-            shippedDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-            expectedDelivery: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            timeline: [
-                { status: 'Picked up', location: 'Kigali Warehouse', timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
-                { status: 'Delivered', location: 'Dar es Salaam', timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() }
-            ]
-        }
-    ],
+    shipments: [],
     loading: false,
     error: null,
 

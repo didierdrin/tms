@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Truck, Package, FileText, TrendingUp, Eye, EyeOff } from 'lucide-react';
+import { Plus, Truck, Package, FileText, TrendingUp, Eye, EyeOff, Receipt, FileCheck, FileSpreadsheet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useShipmentStore from '../store/useShipmentStore';
 import useAuthStore from '../store/useAuthStore';
 import useCurrencyStore from '../store/useCurrencyStore';
+import AddShipmentDialog from '../components/AddShipmentDialog';
+import { generateInvoice, generateReceipt, generateQuotation, generateCoverLetter } from '../utils/documentGenerator';
 
 const ClientDashboard = () => {
-    const { shipments } = useShipmentStore();
-    const { userProfile } = useAuthStore();
+    const { shipments, fetchShipments } = useShipmentStore();
+    const { userProfile, user } = useAuthStore();
     const { formatAmount } = useCurrencyStore();
     const [showBalance, setShowBalance] = useState(true);
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            fetchShipments(user.uid);
+        }
+    }, [user, fetchShipments]);
 
     const stats = [
         {
@@ -55,30 +64,30 @@ const ClientDashboard = () => {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 mb-10">
             {/* Welcome Section */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-gradient-to-r from-primary-600 to-primary-500 rounded-2xl p-8 text-white shadow-lg"
+                className="bg-gradient-to-r from-primary-600 to-primary-500 rounded-xl mt-5 mx-2 p-8 text-white shadow-lg"
             >
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                            Welcome back, {userProfile?.displayName || 'User'}!
+                            Welcome back, {userProfile?.displayName || userProfile?.email.slice(0)}!
                         </h1>
                         <p className="text-primary-100">
                             Manage your shipments and track deliveries in real-time
                         </p>
                     </div>
-                    <Link
-                        to="/services"
+                    <button
+                        onClick={() => setDialogOpen(true)}
                         className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
                     >
                         <Plus size={20} />
                         New Shipment
-                    </Link>
+                    </button>
                 </div>
             </motion.div>
 
@@ -174,13 +183,13 @@ const ClientDashboard = () => {
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Quick Actions</h3>
                         <div className="space-y-3">
-                            <Link
-                                to="/services"
+                            <button
+                                onClick={() => setDialogOpen(true)}
                                 className="flex items-center gap-3 p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
                             >
                                 <Plus size={20} />
                                 <span className="font-medium">New Shipment</span>
-                            </Link>
+                            </button>
                             <Link
                                 to="/track"
                                 className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
@@ -199,7 +208,7 @@ const ClientDashboard = () => {
                     </div>
 
                     {/* Account Balance */}
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-xl p-6 text-white shadow-lg">
+                    {/* <div className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-xl p-6 text-white shadow-lg">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold">Account Balance</h3>
                             <button
@@ -213,9 +222,68 @@ const ClientDashboard = () => {
                             {showBalance ? formatAmount(5250) : '••••••'}
                         </p>
                         <p className="text-slate-400 text-sm mt-2">Available for shipments</p>
-                    </div>
+                    </div> */}
                 </motion.div>
             </div>
+
+            {/* Document Generation */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-lg"
+            >
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">Generate Documents</h2>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">Create invoices, receipts, quotations, and covers for your shipments</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <button
+                        onClick={() => recentShipments[0] && generateInvoice(recentShipments[0], userProfile)}
+                        disabled={recentShipments.length === 0}
+                        className="flex items-center gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <FileText size={24} />
+                        <div className="text-left">
+                            <p className="font-semibold">Invoice</p>
+                            <p className="text-xs opacity-75">Generate invoice</p>
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => recentShipments[0] && generateReceipt(recentShipments[0], userProfile)}
+                        disabled={recentShipments.length === 0}
+                        className="flex items-center gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Receipt size={24} />
+                        <div className="text-left">
+                            <p className="font-semibold">Receipt</p>
+                            <p className="text-xs opacity-75">Generate receipt</p>
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => recentShipments[0] && generateQuotation(recentShipments[0], userProfile)}
+                        disabled={recentShipments.length === 0}
+                        className="flex items-center gap-3 p-4 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <FileSpreadsheet size={24} />
+                        <div className="text-left">
+                            <p className="font-semibold">Quotation</p>
+                            <p className="text-xs opacity-75">Generate quote</p>
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => recentShipments[0] && generateCoverLetter(recentShipments[0], userProfile)}
+                        disabled={recentShipments.length === 0}
+                        className="flex items-center gap-3 p-4 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <FileCheck size={24} />
+                        <div className="text-left">
+                            <p className="font-semibold">Cover</p>
+                            <p className="text-xs opacity-75">Generate cover</p>
+                        </div>
+                    </button>
+                </div>
+            </motion.div>
+
+            <AddShipmentDialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)} />
         </div>
     );
 };

@@ -4,15 +4,10 @@ import {
     LayoutDashboard,
     Users,
     Truck,
-    FileText,
-    BarChart,
-    Settings,
     Menu,
     X,
     LogOut,
-    Map as MapIcon,
-    User,
-    Bell
+    Map as MapIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';

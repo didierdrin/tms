@@ -6,7 +6,6 @@ import {
     X,
     Home,
     Package,
-    FileText,
     Phone,
     LogIn,
     User,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Truck, Package, FileText, TrendingUp, Eye, EyeOff, Receipt, FileCheck, FileSpreadsheet } from 'lucide-react';
+import { Plus, Truck, Package, FileText, TrendingUp, Receipt, FileCheck, FileSpreadsheet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useShipmentStore from '../store/useShipmentStore';
 import useAuthStore from '../store/useAuthStore';
@@ -12,7 +12,6 @@ const ClientDashboard = () => {
     const { shipments, fetchShipments } = useShipmentStore();
     const { userProfile, user } = useAuthStore();
     const { formatAmount } = useCurrencyStore();
-    const [showBalance, setShowBalance] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
 
     useEffect(() => {

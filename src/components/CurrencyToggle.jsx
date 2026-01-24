@@ -1,5 +1,4 @@
 import React from 'react';
-import { DollarSign } from 'lucide-react';
 import useCurrencyStore from '../store/useCurrencyStore';
 
 const CurrencyToggle = () => {

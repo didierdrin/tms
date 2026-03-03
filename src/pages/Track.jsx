@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Truck, MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import useShipmentStore from '../store/useShipmentStore';
+import { api } from '../lib/api';
 
 const Track = () => {
     const [trackingNumber, setTrackingNumber] = useState('');
     const [searchedShipment, setSearchedShipment] = useState(null);
     const [error, setError] = useState('');
-    const { shipments } = useShipmentStore();
+    const [searching, setSearching] = useState(false);
 
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault();
         setError('');
         setSearchedShipment(null);
@@ -19,11 +19,15 @@ const Track = () => {
             return;
         }
 
-        const found = shipments.find(s => s.trackingNumber?.toLowerCase() === trackingNumber.toLowerCase());
-        if (found) {
+        setSearching(true);
+        try {
+            const encoded = encodeURIComponent(trackingNumber.trim());
+            const found = await api(`/api/shipments/track/${encoded}`);
             setSearchedShipment(found);
-        } else {
-            setError('Shipment not found. Please check your tracking number.');
+        } catch (err) {
+            setError(err.status === 404 ? 'Shipment not found. Please check your tracking number.' : err.message || 'Search failed.');
+        } finally {
+            setSearching(false);
         }
     };
 
@@ -100,9 +104,10 @@ const Track = () => {
                             </div>
                             <button
                                 type="submit"
-                                className="px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-lg shadow-lg shadow-primary-500/30 hover:from-primary-700 hover:to-primary-600 transition-all hover:-translate-y-0.5"
+                                disabled={searching}
+                                className="px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-lg shadow-lg shadow-primary-500/30 hover:from-primary-700 hover:to-primary-600 transition-all hover:-translate-y-0.5 disabled:opacity-50"
                             >
-                                Track
+                                {searching ? 'Searching...' : 'Track'}
                             </button>
                         </div>
 

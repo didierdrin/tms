@@ -1,117 +1,94 @@
 import { create } from 'zustand';
-import { auth, db } from '../lib/firebase';
-import {
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    sendEmailVerification
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { api } from '../lib/api';
+
+const TOKEN_KEY = 'tms_token';
 
 const useAuthStore = create((set) => ({
     user: null,
     userProfile: null,
-    role: null, // 'admin' | 'client'
+    role: null,
     loading: true,
     error: null,
 
     initialize: () => {
-        return onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                try {
-                    // Fetch user profile from Firestore
-                    const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        set({
-                            user: firebaseUser,
-                            userProfile: userData,
-                            role: userData.role || 'client',
-                            loading: false,
-                            error: null
-                        });
-                    } else {
-                        // User document doesn't exist, create default client profile
-                        const defaultProfile = {
-                            email: firebaseUser.email,
-                            role: 'client',
-                            createdAt: new Date().toISOString(),
-                        };
-
-                        await setDoc(doc(db, "users", firebaseUser.uid), defaultProfile);
-
-                        set({
-                            user: firebaseUser,
-                            userProfile: defaultProfile,
-                            role: 'client',
-                            loading: false,
-                            error: null
-                        });
-                    }
-                } catch (error) {
-                    console.error("Error fetching user profile:", error);
-                    set({
-                        user: firebaseUser,
-                        userProfile: null,
-                        role: 'client',
-                        loading: false,
-                        error: error.message
-                    });
-                }
-            } else {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+            set({ user: null, userProfile: null, role: null, loading: false, error: null });
+            return () => {};
+        }
+        api('/api/auth/me')
+            .then(({ user, userProfile }) => {
+                set({
+                    user: { id: user.id, email: user.email, uid: user.id },
+                    userProfile,
+                    role: user.role || userProfile?.role || 'client',
+                    loading: false,
+                    error: null,
+                });
+            })
+            .catch(() => {
+                localStorage.removeItem(TOKEN_KEY);
                 set({ user: null, userProfile: null, role: null, loading: false, error: null });
-            }
-        });
+            });
+        return () => {};
     },
 
     login: async (email, password) => {
         set({ loading: true, error: null });
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            set({ loading: false });
-            return userCredential;
+            const data = await api('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password }),
+            });
+            localStorage.setItem(TOKEN_KEY, data.token);
+            set({
+                user: { id: data.user.id, email: data.user.email, uid: data.user.id },
+                userProfile: data.userProfile,
+                role: data.user.role || data.userProfile?.role || 'client',
+                loading: false,
+                error: null,
+            });
+            return data;
         } catch (error) {
-            set({ loading: false, error: error.message });
-            throw error;
+            const message = error.data?.error || error.message;
+            set({ loading: false, error: message });
+            throw new Error(message);
         }
     },
 
     register: async (email, password, additionalData = {}) => {
         set({ loading: true, error: null });
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-            // Send email verification
-            await sendEmailVerification(userCredential.user);
-
-            // Create user profile in Firestore
-            const userProfile = {
-                email: email,
-                role: additionalData.role || 'client',
-                ...additionalData,
-                createdAt: new Date().toISOString(),
-            };
-
-            await setDoc(doc(db, "users", userCredential.user.uid), userProfile);
-
-            set({ loading: false });
-            return userCredential;
+            const data = await api('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email,
+                    password,
+                    role: additionalData.role || 'client',
+                    displayName: additionalData.displayName,
+                    phone: additionalData.phone,
+                    company: additionalData.company,
+                }),
+            });
+            localStorage.setItem(TOKEN_KEY, data.token);
+            set({
+                user: { id: data.user.id, email: data.user.email, uid: data.user.id },
+                userProfile: data.userProfile ?? data.user,
+                role: data.user.role || 'client',
+                loading: false,
+                error: null,
+            });
+            return data;
         } catch (error) {
-            set({ loading: false, error: error.message });
-            throw error;
+            const message = error.data?.error || error.message;
+            set({ loading: false, error: message });
+            throw new Error(message);
         }
     },
 
     logout: async () => {
-        try {
-            await signOut(auth);
-            set({ user: null, userProfile: null, role: null, error: null });
-        } catch (error) {
-            set({ error: error.message });
-            throw error;
-        }
+        localStorage.removeItem(TOKEN_KEY);
+        set({ user: null, userProfile: null, role: null, error: null });
     },
 
     clearError: () => set({ error: null }),

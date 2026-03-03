@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Eye, Search, Mail, Phone } from 'lucide-react';
 import useCustomerStore from '../store/useCustomerStore';
 import useCurrencyStore from '../store/useCurrencyStore';
 
 const Customers = () => {
-    const { customers, deleteCustomer } = useCustomerStore();
+    const { customers, deleteCustomer, fetchCustomers } = useCustomerStore();
+    useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
     const { formatAmount } = useCurrencyStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState(null);
 
     const filteredCustomers = customers.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.company.toLowerCase().includes(searchTerm.toLowerCase())
+        (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.company || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const handleDelete = async (id) => {

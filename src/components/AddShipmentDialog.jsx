@@ -68,7 +68,7 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
             const estimatedCost = calculateCost();
             
             const shipmentData = {
-                userId: user.uid,
+                userId: user?.id || user?.uid,
                 userEmail: user.email,
                 trackingNumber: `TMS-${Date.now()}`,
                 type: SERVICES.find(s => s.id === formData.service)?.name || 'General',

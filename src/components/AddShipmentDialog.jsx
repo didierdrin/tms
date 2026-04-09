@@ -25,7 +25,6 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
         destination: '',
         items: [{ description: '', quantity: 1, weight: 0 }]
     });
-    const [loading, setLoading] = useState(false);
     const [paying, setPaying] = useState(false);
     const [paymentError, setPaymentError] = useState(null);
 
@@ -94,6 +93,20 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
         }
     };
 
+    const openIremboWidget = ({ publicKey, invoiceNumber }) => {
+        return new Promise((resolve, reject) => {
+            try {
+                window.IremboPay.initiate({
+                    publicKey,
+                    invoiceNumber,
+                    callback: (result) => resolve(result),
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
+    };
+
     const handlePayAndCreate = async () => {
         setPaymentError(null);
         setPaying(true);
@@ -118,10 +131,8 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
                 })
             });
 
-            window.IremboPay.initiate({
-                publicKey,
-                invoiceNumber
-            });
+            // Newer inline widget requires a callback; we still finalize via server polling.
+            await openIremboWidget({ publicKey, invoiceNumber });
 
             const intent = await pollIntent(intentId);
             if (intent.status !== 'COMPLETED') {
@@ -331,12 +342,12 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
                             </button>
                             <button
                                 type="submit"
-                                disabled={loading || paying}
+                                disabled={paying}
                                 className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-lg hover:from-primary-700 hover:to-primary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {paying ? 'Processing Payment...' : 'Create Shipment'}
                             </button>
-                            <button
+                            {/* <button
                                 type="button"
                                 onClick={async () => {
                                     setPaymentError(null);
@@ -361,7 +372,7 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
                                 className="flex-1 px-6 py-3 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Creating...' : 'Create Without Paying'}
-                            </button>
+                            </button> */}
                         </div>
                     </form>
                 </motion.div>

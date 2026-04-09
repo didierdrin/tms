@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogIn, Mail, Lock, AlertCircle, Loader, Eye, EyeOff } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
@@ -11,8 +11,18 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const { login } = useAuthStore();
+    const { login, user, role } = useAuthStore();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        if (!user) return;
+        if (role === 'admin') {
+            navigate('/admin/dashboard', { replace: true });
+            return;
+        }
+        navigate('/dashboard', { replace: true });
+    }, [user, role, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,12 +31,15 @@ const Login = () => {
 
         try {
             await login(email, password);
-            const role = useAuthStore.getState().role;
-            
-            if (role === 'admin') {
+
+            const nextPath = location.state?.from?.pathname;
+            const next = typeof nextPath === 'string' ? nextPath : null;
+            const currentRole = useAuthStore.getState().role;
+
+            if (currentRole === 'admin') {
                 navigate('/admin/dashboard', { replace: true });
             } else {
-                navigate('/dashboard', { replace: true });
+                navigate(next || '/dashboard', { replace: true });
             }
         } catch (err) {
             console.error('Login error:', err);

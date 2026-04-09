@@ -55,7 +55,8 @@ const Register = () => {
                 company: formData.company,
                 role: 'client'
             });
-            navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
+            // Go straight into the app after successful signup
+            navigate('/dashboard', { replace: true });
         } catch (err) {
             console.error('Registration error:', err);
             setError(err.message || 'Failed to create account. Please try again.');

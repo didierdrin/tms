@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Trash2, Package, DollarSign } from 'lucide-react';
 import useShipmentStore from '../store/useShipmentStore';
 import useAuthStore from '../store/useAuthStore';
 import useCurrencyStore from '../store/useCurrencyStore';
+import { api } from '../lib/api';
 
 const SERVICES = [
     { id: 'import-clearance', name: 'Import Clearance', basePrice: 200 },
@@ -25,6 +26,8 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
         items: [{ description: '', quantity: 1, weight: 0 }]
     });
     const [loading, setLoading] = useState(false);
+    const [paying, setPaying] = useState(false);
+    const [paymentError, setPaymentError] = useState(null);
 
     const addItem = () => {
         setFormData(prev => ({
@@ -59,31 +62,82 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
         return service.basePrice + (totalWeight * 2) + (totalItems * 10);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    const estimatedCost = useMemo(() => calculateCost(), [formData]);
 
+    const buildShipmentData = () => {
+        const totalWeight = formData.items.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0);
+        return {
+            userId: user?.id || user?.uid,
+            userEmail: user?.email,
+            trackingNumber: `TMS-${Date.now()}`,
+            type: SERVICES.find(s => s.id === formData.service)?.name || 'General',
+            origin: formData.origin,
+            destination: formData.destination,
+            items: formData.items,
+            weight: totalWeight,
+            estimatedCost: Math.round(Number(estimatedCost) || 0),
+            status: 'pending',
+            shippedDate: new Date().toISOString(),
+            expectedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            createdAt: new Date().toISOString()
+        };
+    };
+
+    const pollIntent = async (intentId, { intervalMs = 2000, timeoutMs = 120000 } = {}) => {
+        const start = Date.now();
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            const { intent } = await api(`/api/payments/rental-intent/${intentId}`);
+            if (intent?.status === 'COMPLETED' || intent?.status === 'FAILED') return intent;
+            if (Date.now() - start > timeoutMs) {
+                throw new Error('Payment is taking too long. Please check again from your payments history.');
+            }
+            await new Promise((r) => setTimeout(r, intervalMs));
+        }
+    };
+
+    const handlePayAndCreate = async () => {
+        setPaymentError(null);
+        setPaying(true);
         try {
-            const totalWeight = formData.items.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0);
-            const estimatedCost = calculateCost();
-            
-            const shipmentData = {
-                userId: user?.id || user?.uid,
-                userEmail: user.email,
-                trackingNumber: `TMS-${Date.now()}`,
-                type: SERVICES.find(s => s.id === formData.service)?.name || 'General',
-                origin: formData.origin,
-                destination: formData.destination,
-                items: formData.items,
-                weight: totalWeight,
-                estimatedCost,
-                status: 'pending',
-                shippedDate: new Date().toISOString(),
-                expectedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                createdAt: new Date().toISOString()
-            };
+            const publicKey = process.env.REACT_APP_IPAY_PUBLIC_KEY;
+            if (!publicKey) {
+                throw new Error('Missing REACT_APP_IPAY_PUBLIC_KEY in frontend environment.');
+            }
+            if (!window?.IremboPay?.initiate) {
+                throw new Error('IremboPay widget is not loaded. Check the inline.js script in public/index.html.');
+            }
 
-            await addShipment(shipmentData);
+            const amount = Math.round(Number(estimatedCost) || 0);
+            if (!amount || amount <= 0) throw new Error('Invalid amount for payment.');
+
+            const { invoiceNumber, intentId } = await api('/api/payments/create-invoice-for-amount', {
+                method: 'POST',
+                body: JSON.stringify({
+                    amount,
+                    address: formData.destination,
+                    shipmentRef: formData.service ? `TMS-${Date.now()}` : undefined
+                })
+            });
+
+            window.IremboPay.initiate({
+                publicKey,
+                invoiceNumber
+            });
+
+            const intent = await pollIntent(intentId);
+            if (intent.status !== 'COMPLETED') {
+                throw new Error('Payment failed or was cancelled.');
+            }
+
+            const shipmentData = buildShipmentData();
+            await addShipment({
+                ...shipmentData,
+                paymentIntentId: intentId,
+                paymentInvoiceNumber: invoiceNumber,
+                paymentStatus: intent.status
+            });
+
             onClose();
             setFormData({
                 service: '',
@@ -92,10 +146,16 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
                 items: [{ description: '', quantity: 1, weight: 0 }]
             });
         } catch (error) {
-            console.error('Error creating shipment:', error);
+            setPaymentError(error?.message || 'Payment failed');
         } finally {
-            setLoading(false);
+            setPaying(false);
         }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        // Make the primary submit action run the IremboPay flow.
+        await handlePayAndCreate();
     };
 
     if (!isOpen) return null;
@@ -250,9 +310,15 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
                                         <span className="font-medium text-slate-900 dark:text-slate-100">Estimated Cost</span>
                                     </div>
                                     <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                                        {formatAmount(calculateCost())}
+                                        {formatAmount(estimatedCost)}
                                     </span>
                                 </div>
+                            </div>
+                        )}
+
+                        {paymentError && (
+                            <div className="p-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">
+                                {paymentError}
                             </div>
                         )}
 
@@ -267,10 +333,36 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
                             </button>
                             <button
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || paying}
                                 className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold rounded-lg hover:from-primary-700 hover:to-primary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {loading ? 'Creating...' : 'Create Shipment'}
+                                {paying ? 'Processing Payment...' : 'Create Shipment'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    setPaymentError(null);
+                                    setLoading(true);
+                                    try {
+                                        const shipmentData = buildShipmentData();
+                                        await addShipment(shipmentData);
+                                        onClose();
+                                        setFormData({
+                                            service: '',
+                                            origin: 'Kigali, Rwanda',
+                                            destination: '',
+                                            items: [{ description: '', quantity: 1, weight: 0 }]
+                                        });
+                                    } catch (error) {
+                                        setPaymentError(error?.message || 'Failed to create shipment');
+                                    } finally {
+                                        setLoading(false);
+                                    }
+                                }}
+                                disabled={!formData.service || paying || loading}
+                                className="flex-1 px-6 py-3 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Creating...' : 'Create Without Paying'}
                             </button>
                         </div>
                     </form>

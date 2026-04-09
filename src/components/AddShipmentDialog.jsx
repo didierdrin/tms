@@ -61,12 +61,12 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
         return service.basePrice + (totalWeight * 2) + (totalItems * 10);
     }, [formData.items, formData.service]);
 
-    const buildShipmentData = () => {
+    const buildShipmentData = (trackingNumberOverride) => {
         const totalWeight = formData.items.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0);
         return {
             userId: user?.id || user?.uid,
             userEmail: user?.email,
-            trackingNumber: `TMS-${Date.now()}`,
+            trackingNumber: trackingNumberOverride || `TMS-${Date.now()}`,
             type: SERVICES.find(s => s.id === formData.service)?.name || 'General',
             origin: formData.origin,
             destination: formData.destination,
@@ -93,20 +93,6 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
         }
     };
 
-    const openIremboWidget = ({ publicKey, invoiceNumber }) => {
-        return new Promise((resolve, reject) => {
-            try {
-                window.IremboPay.initiate({
-                    publicKey,
-                    invoiceNumber,
-                    callback: (result) => resolve(result),
-                });
-            } catch (e) {
-                reject(e);
-            }
-        });
-    };
-
     const handlePayAndCreate = async () => {
         setPaymentError(null);
         setPaying(true);
@@ -122,41 +108,60 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
             const amount = Math.round(Number(estimatedCost) || 0);
             if (!amount || amount <= 0) throw new Error('Invalid amount for payment.');
 
+            const shipmentRef = `TMS-${Date.now()}`;
             const { invoiceNumber, intentId } = await api('/api/payments/create-invoice-for-amount', {
                 method: 'POST',
                 body: JSON.stringify({
                     amount,
                     address: formData.destination,
-                    shipmentRef: formData.service ? `TMS-${Date.now()}` : undefined
+                    shipmentRef,
                 })
             });
 
-            // Newer inline widget requires a callback; we still finalize via server polling.
-            await openIremboWidget({ publicKey, invoiceNumber });
+            // Match the working ryde-web pattern: open widget, then finalize via server polling.
+            window.IremboPay.initiate({
+                publicKey,
+                invoiceNumber,
+                locale: window.IremboPay?.locale?.EN,
+                callback: async (err) => {
+                    setPaying(false);
+                    if (err) {
+                        setPaymentError('Payment failed or was cancelled.');
+                        return;
+                    }
+                    try {
+                        const intent = await pollIntent(intentId);
+                        if (intent.status !== 'COMPLETED') {
+                            setPaymentError('Payment failed or was cancelled.');
+                            return;
+                        }
 
-            const intent = await pollIntent(intentId);
-            if (intent.status !== 'COMPLETED') {
-                throw new Error('Payment failed or was cancelled.');
-            }
+                        const shipmentData = buildShipmentData(shipmentRef);
+                        await addShipment({
+                            ...shipmentData,
+                            paymentIntentId: intentId,
+                            paymentInvoiceNumber: invoiceNumber,
+                            paymentStatus: intent.status
+                        });
 
-            const shipmentData = buildShipmentData();
-            await addShipment({
-                ...shipmentData,
-                paymentIntentId: intentId,
-                paymentInvoiceNumber: invoiceNumber,
-                paymentStatus: intent.status
+                        onClose();
+                        setFormData({
+                            service: '',
+                            origin: 'Kigali, Rwanda',
+                            destination: '',
+                            items: [{ description: '', quantity: 1, weight: 0 }]
+                        });
+                    } catch (e) {
+                        setPaymentError(e?.message || 'Payment failed');
+                    }
+                },
             });
-
-            onClose();
-            setFormData({
-                service: '',
-                origin: 'Kigali, Rwanda',
-                destination: '',
-                items: [{ description: '', quantity: 1, weight: 0 }]
-            });
+            return;
         } catch (error) {
             setPaymentError(error?.message || 'Payment failed');
         } finally {
+            // If widget opened successfully, paying state is managed inside callback.
+            // If we failed before opening widget, reset here.
             setPaying(false);
         }
     };

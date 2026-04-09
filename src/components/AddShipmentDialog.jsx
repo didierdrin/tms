@@ -52,17 +52,15 @@ const AddShipmentDialog = ({ isOpen, onClose }) => {
         }));
     };
 
-    const calculateCost = () => {
+    const estimatedCost = useMemo(() => {
         const service = SERVICES.find(s => s.id === formData.service);
         if (!service) return 0;
-        
+
         const totalWeight = formData.items.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0);
         const totalItems = formData.items.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
-        
-        return service.basePrice + (totalWeight * 2) + (totalItems * 10);
-    };
 
-    const estimatedCost = useMemo(() => calculateCost(), [formData]);
+        return service.basePrice + (totalWeight * 2) + (totalItems * 10);
+    }, [formData.items, formData.service]);
 
     const buildShipmentData = () => {
         const totalWeight = formData.items.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0);
